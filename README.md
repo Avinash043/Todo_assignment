@@ -20,7 +20,7 @@ Ensure you have the following installed:
 
 2. Navigate to the project directory:
 
-   cd todo_assignment
+   cd Todo_assignment
 
 3. Install dependencies
    
