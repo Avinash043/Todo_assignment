@@ -1,12 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Link } from "react-router";
 import Checkbox from "@mui/material/Checkbox";
 import { useSelector } from "react-redux";
 
 function Home() {
   const todos = useSelector((state) => state.todos);
-  const [tasks, setTasks] = useState([]);
-  
+  const tasks = useSelector((state) => state.tasks);
+
+  console.log(tasks);
+ 
   //fetching data from existing API
   useEffect(() => {
     const fetchTask = async () => {
@@ -15,7 +17,7 @@ function Home() {
           "https://jsonplaceholder.typicode.com/todos"
         );
         const data = await response.json();
-        setTasks(data); 
+       localStorage.setItem("tasks", JSON.stringify(data));
       } catch (error) {
         console.error(error);
       }
@@ -72,7 +74,11 @@ function Home() {
           >
             {task.completed ? <Checkbox checked /> : <Checkbox />}
             <h1 className="font-medium text-lg">{task.title}</h1>
-            <Link to={`/edittask/${task.id}`}></Link>
+            <Link to={`/edittodo/${task.id}`}>
+                <button className="py-2 px-4 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-200">
+                  Update Task
+                </button>
+              </Link>
           </div>
         ))}
       </div>
