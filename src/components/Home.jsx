@@ -1,86 +1,95 @@
-import { useEffect } from "react";
-import { Link } from "react-router";
-import Checkbox from "@mui/material/Checkbox";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import TaskInput from "./TaskInput";
+import { deleteTodo } from "../redux/todoReducer";
+import { Star, Trash2 } from "lucide-react";
+import { logout } from "../redux/authReducer";
+import { useNavigate } from "react-router";
+import Weather from "./Weather";
 
 function Home() {
-  const todos = useSelector((state) => state.todos);
-  const tasks = useSelector((state) => state.tasks);
+  const navigate = useNavigate();
+  const todos = useSelector((state) => state.todo.todos); //get todos from todoReducer
+  const priortisedTodos = [...todos].sort((a, b) => b.priority - a.priority); //sort todos based on priority
+  const userName = useSelector((state) => state.auth.user.userName); //get username from auth localStorage
+  const userTodo = priortisedTodos.filter((todo) => todo.owner === userName); //filter todos based on username
+  const dispatch = useDispatch();
 
-  console.log(tasks);
- 
-  //fetching data from existing API
-  useEffect(() => {
-    const fetchTask = async () => {
-      try {
-        const response = await fetch(
-          "https://jsonplaceholder.typicode.com/todos"
-        );
-        const data = await response.json();
-       localStorage.setItem("tasks", JSON.stringify(data));
-      } catch (error) {
-        console.error(error);
-      }
-    };
-    fetchTask();
-  }, []);
+  //logout
+  const handleLogout = () => {
+    const user = { isLogin: false, userName: null };
+    dispatch(logout(user));
+    navigate("/");
+  };
+
+  //delete todo
+  function handleDelete(todoId) {
+    dispatch(deleteTodo(todoId));
+  }
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-4xl md:text-6xl text-center text-rose-500 font-bold mt-6">
-        TO-DO List
-      </h1>
-      {/* button for add new task */}
-      <div className="flex justify-center mt-4">
-        <Link to="/addtask">
-          <button className="py-2 px-4 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-200">
-            + Add Task
-          </button>
-        </Link>
-      </div>
-      <div className="mt-6 space-y-4">
-        {/* Display all task */}
-        {todos.map((todo) => (
-          <div
-            key={todo.id}
-            className="bg-slate-300 p-4 rounded-md flex flex-col md:flex-row md:items-center md:justify-between gap-4"
-          >
-            <div className="flex gap-4 items-center ">
-              <Checkbox />
-              <div>
-                <h1 className="font-bold text-lg">{todo.title}</h1>
-                <p className="text-sm text-gray-700">{todo.description}</p>
+    <div className="min-h-screen p-6 bg-[#323232]">
+      {/* Header */}
+      <header className="bg-[#141416] p-3 rounded-md flex flex-row items-center gap-4 justify-between px-4 overflow-x-auto">
+        <div className="text-[#C4D9FF] font-bold pl-6">TODO-APP</div>
+        <div className="flex gap-5 items-center">
+          <div className="text-white font-semibold">
+            Welcome, <strong>{userName}</strong>
+          </div>
+          <div>
+            <button
+              className="mr-2 py-1 px-3 bg-[#F39F5A] text-black font-semibold rounded hover:bg-[#ad6224] transition duration-200"
+              onClick={handleLogout}
+            >
+              Logout
+            </button>
+          </div>
+        </div>
+      </header>
+      {/* Weather Component */}
+      <Weather />
+      {/* TaskInput Component */}
+      <TaskInput />
+      <div className="space-y-4 ">
+         {/* Task list */}
+        {userTodo && Array.isArray(userTodo) ? 
+        //if tasks available
+        ( userTodo.map((todo) => (
+            <div
+              key={todo.id}
+              className="bg-[#141416] p-2 rounded-md flex flex-col md:flex-row md:items-center md:justify-between gap-4 overflow-x-auto"
+            >
+              <div className="flex gap-4 items-center justify-between w-full">
+                <div className="flex gap-4 items-center ml-6">
+                  <input
+                    type="checkbox"
+                    className=" w-5 h-5 border-2 border-[#F39F5A] rounded-2xl bg-transparent focus:ring-2 focus:ring-[#F39F5A] checked:bg-[#F39F5A] checked:border-[#F39F5A]"
+                  />
+                  <div>
+                    <h1 className="font-bold text-lg text-white">
+                      {todo.task}
+                    </h1>
+                  </div>
+                </div>
+                <div className="flex gap-4 items-center">
+                  <div className="flex gap-1 items-center">
+                    {[...Array(todo.priority)].map((index) => (
+                      <Star key={index} color="#EEDF7A" fill="#EEDF7A" />
+                    ))}
+                  </div>
+                  <button
+                    onClick={() => handleDelete(todo.id)}
+                    className="pr-10"
+                  >
+                    <Trash2 color="red" />
+                  </button>
+                </div>
               </div>
             </div>
-            <div className="text-right md:pr-6">
-              <Link to={`/edittask/${todo.id}`}>
-                <button className="py-2 px-4 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-200">
-                  Update Task
-                </button>
-              </Link>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <hr className="my-6 border-gray-300" />
-
-      <div className="space-y-4">
-        {/* Display all fetched task from API */}
-        {tasks.map((task) => (
-          <div
-            key={task.id}
-            className="bg-slate-300 p-4 rounded-md flex items-center gap-4"
-          >
-            {task.completed ? <Checkbox checked /> : <Checkbox />}
-            <h1 className="font-medium text-lg">{task.title}</h1>
-            <Link to={`/edittodo/${task.id}`}>
-                <button className="py-2 px-4 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-200">
-                  Update Task
-                </button>
-              </Link>
-          </div>
-        ))}
+          ))
+        ) : (
+          //if no tasks available
+          <h1 className="text-white">No tasks available</h1>
+        )}
       </div>
     </div>
   );
